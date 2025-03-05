@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manicura Elegante</title>
+    <!-- Cargar PDFMake desde un CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <style>
+        /* Tus estilos CSS aquí */
+        body {
+            background-color: #f4f4f4;
+            color: #333;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            position: relative;
+        }
+        .servicios-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px;
+            max-width: 1000px;
+        }
+        .servicio {
+            border: 2px solid #ff69b4;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            width: 250px;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .servicio img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #ff69b4;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            color: white;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #ff1493;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            color: black;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255, 105, 180, 0.8);
+            text-align: center;
+            z-index: 1000;
+            cursor: move;
+        }
+        .modal button {
+            margin-top: 10px;
+        }
+        #total {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff69b4;
+            margin-top: 10px;
+        }
+        .menu {
+            position: fixed;
+            top: 50%;
+            right: 0;
+            transform: translateY(-50%);
+            background-color: #333;
+            padding: 10px;
+            border-radius: 10px 0 0 10px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        .menu button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+            background-color: #ff69b4;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px;
+        }
+        .menu button:hover {
+            background-color: #ff1493;
+        }
+        .contenido-pestaña {
+            display: none;
+            position: fixed;
+            top: 50%;
+            right: 100px;
+            transform: translateY(-50%);
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+            color: white;
+            width: 200px;
+            z-index: 999;
+            cursor: move;
+        }
+        .contenido-pestaña.activo {
+            display: block;
+        }
+        .cerrar-pestana {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            color: white;
+            background-color: red;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            text-align: center;
+            line-height: 25px;
+        }
+        .cerrar-pestana:hover {
+            background-color: darkred;
+        }
+        .ocultar {
+            display: none;
+        }
+        #formulario-turno {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #formulario-turno label {
+            font-weight: bold;
+        }
+        #formulario-turno input {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Bienvenido a Manicura Elegante</h1>
+    <div class="servicios-container">
+        <div class="servicio">
+            <img src="manicura1.jpg" alt="Manicura Básica">
+            <h2>Manicura Básica</h2>
+            <p>Precio: $5000.00</p>
+            <button onclick="agregarAlCarrito('Manicura Básica', 5000)">Agregar al Carrito</button>
+        </div>
+        <div class="servicio">
+            <img src="manicura2.jpg" alt="Manicura Francesa">
+            <h2>Manicura Francesa</h2>
+            <p>Precio: $6000.00</p>
+            <button onclick="agregarAlCarrito('Manicura Francesa', 6000)">Agregar al Carrito</button>
+        </div>
+        <div class="servicio">
+            <img src="manicura3.jpg" alt="Manicura con Diseños">
+            <h2>Manicura con Diseños</h2>
+            <p>Precio: $8000.00</p>
+            <button onclick="agregarAlCarrito('Manicura con Diseños', 8000)">Agregar al Carrito</button>
+        </div>
+    </div>
+
+    <!-- Menú lateral -->
+    <div class="menu">
+        <button onclick="mostrarPestana('contacto')">Contacto</button>
+        <button onclick="mostrarPestana('quien-soy')">Quién soy</button>
+        <button onclick="mostrarPestana('ventas')">Servicios</button>
+    </div>
+
+    <!-- Contenido de las pestañas -->
+    <div id="contacto" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('contacto')">×</span>
+        <h3>Contacto</h3>
+        <p>Celular: 3751-371314</p>
+    </div>
+    <div id="quien-soy" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('quien-soy')">×</span>
+        <h3>Quién soy</h3>
+        <p>Manicura Elegante. Servicios de manicura profesional con los mejores productos y diseños.</p>
+    </div>
+    <div id="ventas" class="contenido-pestaña">
+        <span class="cerrar-pestana" onclick="cerrarPestana('ventas')">×</span>
+        <h3>Servicios</h3>
+        <p>Ofrezco una variedad de servicios de manicura para que tus uñas luzcan espectaculares.</p>
+    </div>
+
+    <!-- Modal del carrito -->
+    <div id="modal" class="modal">
+        <h2>Carrito de Servicios</h2>
+        <ul id="lista-carrito"></ul>
+        <p id="total">Total: $0.00</p>
+        <form id="formulario-turno">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" required>
+            <label for="apellido">Apellido:</label>
+            <input type="text" id="apellido" required>
+            <label for="fecha">Fecha del turno:</label>
+            <input type="date" id="fecha" required>
+            <label for="horario">Horario del turno:</label>
+            <input type="time" id="horario" required>
+        </form>
+
+        <button onclick="generarPDF()">Generar Turno</button>
+        <button onclick="cerrarModal()">Cerrar</button>
+    </div>
+
+    <script>
+        let carrito = [];
+
+        // Función para hacer arrastrable un elemento
+        function hacerArrastrable(elemento) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            elemento.onmousedown = arrastrarMouseDown;
+
+            function arrastrarMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = detenerArrastre;
+                document.onmousemove = arrastrarElemento;
+            }
+
+            function arrastrarElemento(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elemento.style.top = (elemento.offsetTop - pos2) + "px";
+                elemento.style.left = (elemento.offsetLeft - pos1) + "px";
+            }
+
+            function detenerArrastre() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // Hacer arrastrables los modales
+        document.querySelectorAll(".modal, .contenido-pestaña").forEach(hacerArrastrable);
+
+        function agregarAlCarrito(nombre, precio) {
+            const nuevoServicio = {
+                nombre: nombre,
+                precio: precio
+            };
+
+            carrito.push(nuevoServicio);
+            actualizarCarrito();
+            document.getElementById("modal").style.display = "block";
+        }
+
+        function actualizarCarrito() {
+            const listaCarrito = document.getElementById("lista-carrito");
+            listaCarrito.innerHTML = '';
+            let total = 0;
+
+            carrito.forEach((item, index) => {
+                const li = document.createElement("li");
+                li.textContent = `${item.nombre} - $${item.precio.toFixed(2)}`;
+                listaCarrito.appendChild(li);
+                total += item.precio;
+            });
+
+            document.getElementById("total").textContent = `Total: $${total.toFixed(2)}`;
+        }
+
+        // Función para convertir una imagen en base64
+        function convertirImagenABase64(url, callback) {
+            const img = new Image();
+            img.crossOrigin = "Anonymous"; // Permite cargar imágenes de otros dominios
+            img.onload = function () {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0);
+                const base64 = canvas.toDataURL("image/png");
+                callback(base64);
+            };
+            img.src = url;
+        }
+        
+        function generarPDF() {
+    const nombre = document.getElementById("nombre").value;
+    const apellido = document.getElementById("apellido").value;
+    const fecha = document.getElementById("fecha").value;
+    const horario = document.getElementById("horario").value;
+
+    if (!nombre || !apellido || !fecha || !horario) {
+        alert("Por favor, complete todos los campos del formulario.");
+        return;
+    }
+
+    // Convertir imágenes a base64
+    const logoWhatsApp = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."; // Base64 de WhatsApp
+    const logoMercadoPago = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."; // Base64 de MercadoPago
+
+    // Crear el contenido del PDF
+    const contenido = [
+        { text: 'Manicura Elegante', style: 'header' },
+        { text: 'Comprobante de Servicios', style: 'subheader' },
+        { text: `Nombre: ${nombre} ${apellido}`, style: 'info' },
+        { text: `Fecha del turno: ${fecha}`, style: 'info' },
+        { text: `Horario del turno: ${horario}`, style: 'info' },
+        { text: '\n' }, // Salto de línea
+        {
+            columns: [
+                { image: logoWhatsApp, width: 20, height: 20 },
+                { text: 'Whatsapp: 3751-371314', alignment: 'left', margin: [10, 0, 0, 0] }
+            ],
+            margin: [0, 10, 0, 10]
+        },
+        {
+            columns: [
+                { image: logoMercadoPago, width: 20, height: 20 },
+                { text: 'Alias: lili.fer.tin', alignment: 'left', margin: [10, 0, 0, 0] }
+            ],
+            margin: [0, 10, 0, 10]
+        },
+        { text: 'Gracias por su compra!', style: 'footer' }
+    ];
+
+    // Definir estilos
+    const estilos = {
+        header: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 0, 0, 10] },
+        subheader: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 10, 0, 10] },
+        info: { fontSize: 12, margin: [0, 5, 0, 5] },
+        footer: { fontSize: 12, italics: true, alignment: 'center', margin: [0, 10, 0, 0] }
+    };
+
+    // Generar el PDF
+    const docDefinition = { content: contenido, styles: estilos };
+    pdfMake.createPdf(docDefinition).download('Comprobante de Pago.pdf');
+}
+        function cerrarModal() {
+            document.getElementById("modal").style.display = "none";
+            carrito = []; // Resetea el carrito
+            actualizarCarrito(); // Actualiza la lista del carrito (vacía)
+            document.getElementById("formulario-turno").reset(); // Limpia el formulario
+        }
+
+        function mostrarPestana(pestana) {
+            document.getElementById(pestana).classList.add("activo");
+        }
+
+        function cerrarPestana(pestana) {
+            document.getElementById(pestana).classList.remove("activo");
+        }
+    </script>
+
+    <div>
+        Diseñado por: Sebastian Gómez - Contacto: +543751316169
+    </div>
+</body>
+</html>
